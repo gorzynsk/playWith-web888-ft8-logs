@@ -83,7 +83,8 @@ def get_spots():
     nowUnix = int(time.time())
     debug_print("====================SPOTS=======================================")
 
-    # Efficiently remove spots older than 3 minutes
+    # TODO: requires refactoring/separation + move
+    # Efficiently remove spots older than X minutes
     with data_lock:
         active_spots[:] = [
             spot for spot in active_spots if nowUnix - spot['timestamp'] <= 1800
@@ -104,3 +105,4 @@ if __name__ == '__main__':
     Thread(target=udp_listener, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)
 
+# TODO: extend base on main.h.locator, counts
