@@ -108,7 +108,7 @@ Spots from same frequency have same color:
             28: 'green'
 ```
 It could be further customized in index.html.
-When there is used som not defined frequency, then random colour is in use.
+Random color will be used for not defined frequency.
 
 
 ![detail](./document/detail.png "detail")
