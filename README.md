@@ -1,3 +1,5 @@
+![banner view](./document/ft8-view.png "ft8 view")
+
 Note: The current version is just alfa release. And current code is not so nice as I would wish :). This was just for prove of concept.
 
 # Visialization of FT8 logs from web-888
