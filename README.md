@@ -115,6 +115,8 @@ When you hold the mouse button over the dot, it will show details with callsing 
 
 Spots contains data from last 1800sec = 30 minutes.
 
+![detail time](./document/withTime.png "detail time")
+
 
 # Debug
 
