@@ -83,26 +83,38 @@ def get_spots():
     nowUnix = int(time.time())
     debug_print("====================SPOTS=======================================")
 
-    # TODO: requires refactoring/separation + move
-    # Efficiently remove spots older than X minutes
-    with data_lock:
-        active_spots[:] = [
-            spot for spot in active_spots if nowUnix - spot['timestamp'] <= 1800
-        ]
-
     # Prepare data for the response
     spots = [{
         'coordinates': spot['coordinates'],
         'callsign': spot['callsign'],
         'frequency': spot['frequency'],
         'timestamp': spot['timestamp']
-    } for spot in active_spots]
+    } for spot in active_spots if nowUnix - spot['timestamp'] <= 1800]
 
     return jsonify(spots)
 
+def cleanup_spots():
+    """Clears out spots that are older than 30 minutes."""
+    nowUnix = int(time.time())
+    with data_lock:
+        active_spots[:] = [
+            spot for spot in active_spots if nowUnix - spot['timestamp'] <= 1800
+        ]
+    debug_print(f"Cleared spots older than 30 min. Remaining spots: {len(active_spots)}")
+
+def schedule_cleanup():
+    """Schedules the cleanup function to run every 30 seconds."""
+    while True:
+        time.sleep(30)  # Wait for 30 seconds
+        cleanup_spots()
+
 if __name__ == '__main__':
     debug_print("Syslog should send data to UDP port: 5140")
+    
+    # Start the UDP listener in a separate thread
     Thread(target=udp_listener, daemon=True).start()
+    
+    # Start the cleanup scheduler in a separate thread
+    Thread(target=schedule_cleanup, daemon=True).start()
+    
     app.run(host='0.0.0.0', port=5000)
-
-# TODO: extend base on main.h.locator, counts
