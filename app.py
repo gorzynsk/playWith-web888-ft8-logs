@@ -46,17 +46,21 @@ class FT8Processor:
             return None
         
         try:
+            #Raw input: <14>Feb 26 05:37:01 web-888 : 2d:07:12:58.165 ..2345678....   2           FT8 DECODE: 7074.566 US5EAA KN78 -8 1012km Wed Feb 26 05:36:45 2025
+            #New spot added: {'callsign': 'US5EAA', 'frequency': 7074.566, 'timestamp': 1740548205, 'coordinates': [48.0, 34.0], 'humantime': datetime.datetime(2025, 2, 26, 5, 36, 45, tzinfo=<UTC>)
             timestamp = datet.strptime(match.group(6), "%a %b %d %H:%M:%S %Y")
             timestamp = pytz.utc.localize(timestamp)
             unix_time = int(timestamp.timestamp())
             lat, lon = mh.to_location(match.group(3))
+            locatorx =  match.group(3)
             
             return {
                 'callsign': match.group(2),
                 'frequency': float(match.group(1)),
                 'timestamp': unix_time,
                 'coordinates': [lat, lon],
-                'humantime': timestamp
+                'humantime': timestamp,
+                'locator': locatorx
             }
         except Exception as e:
             debug_print(f"Parsing error: {str(e)}")
@@ -88,7 +92,8 @@ def get_spots():
         'coordinates': spot['coordinates'],
         'callsign': spot['callsign'],
         'frequency': spot['frequency'],
-        'timestamp': spot['timestamp']
+        'timestamp': spot['timestamp'],
+        'locator': spot['locator']
     } for spot in active_spots if nowUnix - spot['timestamp'] <= 1800]
 
     return jsonify(spots)
