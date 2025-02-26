@@ -1,11 +1,12 @@
 ![banner view](./document/ft8-view.png "ft8 view")
 
-Note: The current version is just alfa release. And current code is not so nice as I would wish :). This was just for prove of concept.
+Note: This is an alpha release. The current code is not as polished as I'd like it to be. It's mainly a proof of concept at the moment.
 
 # Visialization of FT8 logs from web-888
 
-The new version of web-888 allow to use syslog for logging of ft-8 data.
-You have to compile sw on your own or wait till is in general firmware app.
+The latest version of web-888 now supports using syslog for logging FT8 data. You can either compile the software yourself or wait until it's included in the general firmware update.
+
+
 
 
 
@@ -13,26 +14,24 @@ You have to compile sw on your own or wait till is in general firmware app.
 ## Temporary add rsyslog
 
 ### Compile the latest firmware from the master
-Follow up https://github.com/RaspSDR/server to create virtual Alpine linux environment.
+Follow the instructions at https://github.com/RaspSDR/server to create a virtual Alpine Linux environment.
 
-Then on the end compile using:
+
+Once set up, compile the firmware using:
 ```
 cmake --build . -j `nproc --all`
 ```
 
-Copy the new *.bin file from path bellow to sd card. 
-Ps: do not remove original file, just rename it.
-So you can come back with rename any time.
-
+After compilation, copy the new .bin file from the following path to the SD card:
 ```
 ~/alpine/alpine-root/root/server/build/
 ```
-
+Note: Do not delete the original file—just rename it. This way, you can revert to the original version by renaming the file back at any time.
 
 
 ### Custom running linux - Not boot pesistent
 
-Login using ssh to device and add rsyslog package and create config file.
+To run on a custom Linux setup, SSH into your device, install the rsyslog package, and create a configuration file:
 
 ```
 apk-add rsyslog
@@ -45,22 +44,22 @@ vi /etc/rsyslog.conf
 & ~
 ```
 
-The config will send rsyslog output to 2 Ip address .10 and .20. The second IP is just to show, 
-that you can log to multiple IP address. For my project port 5140 is mandatory.
-But you can create own vizualization with grafana using syslog and geo vizualization.
-I prefere to use UDP, since it has no side effects when target device is down.
+This configuration sends logs to two IP addresses: 10.10.10.10:5140 and 10.10.10.20:514. The second IP is simply for demonstration, showing that multiple IPs can be used. For my project, port 5140 is mandatory.
+
+You can create custom visualizations with Grafana using syslog data and geo-location visualization. I prefer using UDP since it doesn't cause issues when the target device is offline.
 
 Restart the service once configured:
+
 ```
 /etc/init.d/rsyslog restart
 ```
 
 
-## Install app
+## Installing the Application
 
-For processing we asume that all the data and system time in UTC.
-Just last 1800sec of data will be displayed.
+The system assumes that all data and system time are in UTC. Only the last 1800 seconds (30 minutes) of data will be displayed.
 
+To install, run the following commands:
 ```
 chmod +rx ./install.sh
 ./install.sh
@@ -71,7 +70,7 @@ source .venv/bin/activate
 
 ## Start the app
 ```
-#without debug to screen
+#Without debugging to screen
 python3  app.py 
 python3  app.py >/dev/null
 
@@ -82,20 +81,20 @@ python3  app.py debug
 
 # Inside the application
 
-For proper function application requires port 5140 on which it receives udp rsyslog logs from web-888.
-The new format does not use "PSKReporter spot" in logs any longer
+For proper functionality, the application requires that UDP port 5140 be used to receive syslog logs from the web-888 device. The new log format no longer includes "PSKReporter spot."
+
+Example log entry:
 
 ```
 Tue Feb 25 17:46:31 1d:19:22:28.183 ..2345678....    3          L FT8 DECODE: 14075.359 CT2HEX IM58 -9 2669km Tue Feb 25 17:46:15 2025
 ```
 
-The program itself parse log in some way and provides result on same  http://server:5000/spots vizualization is done using
-http://server:5000/ . Which will provides javascript page, which every 10 seconds ask for new json like content from /spots.
+The application parses the logs and provides results via the following URL: http://server:5000/spots. The visualization is done through http://server:5000/, which serves a JavaScript-based page that refreshes every 10 seconds to request new JSON-like content from /spots.
 
-The map of the world, it is using openstreet map for vizaulaization. And each spot is represent as dot.
-![world map](./document/show-all.png "world map")
+The world map uses OpenStreetMap for visualization, with each spot represented by a dot.
 
-Spots from same frequency have same color:
+
+Spots on the same frequency share the same color:
 ```
           Mhz:  'Colour'
           ----------------
@@ -107,15 +106,16 @@ Spots from same frequency have same color:
             21: 'purple',
             28: 'green'
 ```
-It could be further customized in index.html.
-Random color will be used for not defined frequency.
+You can further customize these colors in index.html. Any undefined frequency will be assigned a random color.
+
+
 
 
 ![detail](./document/detail.png "detail")
 
-When you hold the mouse button over the dot, it will show details with callsing and frequency.
+Hover over a spot to see detailed information about the callsign and frequency.
 
-Spots contains data from last 1800sec = 30 minutes.
+The spots contain data from the last 1800 seconds (30 minutes).
 
 ![detail time](./document/withTime.png "detail time")
 
@@ -124,6 +124,8 @@ Spots contains data from last 1800sec = 30 minutes.
 
 
 ## Starting app
+
+The application listens on UDP port 5140 (syslog) and TCP port 5000 (web frontend).
 ```
  python3  app.py debug 
 
@@ -132,8 +134,6 @@ Spots contains data from last 1800sec = 30 minutes.
  * Running on http://127.0.0.1:5000
  * Running on http://10.10.1.1:5000
 ```
-
-Application should listen on ports 5140/udp and 5000/tcp.
 
 
 ## Processing  syslog
