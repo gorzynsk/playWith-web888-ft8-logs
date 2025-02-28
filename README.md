@@ -24,7 +24,7 @@ DEBUG=true
 ```
 
 
-Now continu on compile device firmware and add rsyslog support.
+Now continue on compile device firmware and add rsyslog support.
 
 
 
