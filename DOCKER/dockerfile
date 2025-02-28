@@ -1,0 +1,47 @@
+# Start from Alpine Linux base image
+FROM python:3.10-alpine
+
+# Set environment variables for non-interactive installations
+ENV PYTHONUNBUFFERED=1
+ENV VIRTUAL_ENV=/opt/venv
+
+# Install dependencies: git, curl, wget, bash, build-base for compiling Python dependencies
+RUN apk update && apk add --no-cache \
+    git \
+    curl \
+    wget \
+    bash \
+    build-base \
+    libffi-dev \
+    && python3 -m venv $VIRTUAL_ENV \
+    && ln -s $VIRTUAL_ENV/bin/python3 /usr/bin/python3 \
+    && ln -s $VIRTUAL_ENV/bin/pip /usr/bin/pip \
+    && $VIRTUAL_ENV/bin/pip install --upgrade pip  # Upgrade pip inside the virtual environment
+
+# Set the working directory
+WORKDIR /app
+
+# Clone the repository from GitHub
+RUN git clone https://github.com/jurajbujdoso/playWith-web888-ft8-logs .
+
+# Verify that the repository was cloned correctly and `requirements.txt` exists
+RUN ls -al /app
+RUN cat /app/requirements.txt
+
+# Install required Python modules from the requirements.txt inside the virtual environment
+RUN $VIRTUAL_ENV/bin/pip install -r requirements.txt
+
+# Expose the ports you need
+EXPOSE 5140/udp
+EXPOSE 5000/tcp
+
+# Start the application with a check for the DEBUG environment variable
+CMD ["/bin/bash", "-c", "source /opt/venv/bin/activate && \
+    if [ \"$DEBUG\" = \"true\" ]; then \
+        echo 'Starting app.py in debug mode'; \
+        python app.py --debug; \
+    else \
+        echo 'Starting app.py'; \
+        python app.py; \
+    fi"]
+
