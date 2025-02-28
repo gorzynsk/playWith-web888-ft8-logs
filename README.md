@@ -8,6 +8,27 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 
 
 
+# Quick install of application
+
+If you use docker, then it all can be done quick:
+```
+docker run -d -p 5000:5000 -p 5140:5140/udp --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:latest
+
+// and check it is running
+
+docker ps |grep ft8
+```
+
+When you install app using docker, you just have to redirect rsyslog output from web888.
+see seciont (### Custom running linux - Not boot pesistent).
+
+When rsyslog is setup, then application should start to display logs.
+
+There is an option to specify environemnt variable
+```
+DEBUG=true
+```
+
 
 
 

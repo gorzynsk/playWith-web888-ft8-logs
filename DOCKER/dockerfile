@@ -5,7 +5,7 @@ FROM python:3.10-alpine
 ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/opt/venv
 
-# Install dependencies: git, curl, wget, bash, build-base for compiling Python dependencies
+# Install dependencies: git, curl, wget, bash, build-base, and GDAL libraries
 RUN apk update && apk add --no-cache \
     git \
     curl \
@@ -13,6 +13,7 @@ RUN apk update && apk add --no-cache \
     bash \
     build-base \
     libffi-dev \
+    gdal-dev \
     && python3 -m venv $VIRTUAL_ENV \
     && ln -s $VIRTUAL_ENV/bin/python3 /usr/bin/python3 \
     && ln -s $VIRTUAL_ENV/bin/pip /usr/bin/pip \
