@@ -23,8 +23,8 @@ There is an option to specify environemnt variable
 DEBUG=true
 ```
 
-
-Now continue on compile device firmware and add rsyslog support.
+App will be accessible on http://localhost:5000, you have now to
+continue on rsyslog support.
 
 
 
