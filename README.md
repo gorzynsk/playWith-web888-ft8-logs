@@ -8,9 +8,9 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 
 
 
-# Quick install of application which show ft8 data on map of the world
+## Quick install of application which show ft8 data on map of the world
 
-If you use docker, then it all can be done quick:
+If you use docker, then it all can be done quick without dealing with dependency.
 ```
 docker run -d -p 5000:5000 -p 5140:5140/udp --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:latest
 
@@ -31,7 +31,7 @@ Now continu on compile device firmware and add rsyslog support.
 
 
 
-## Temporary add rsyslog
+# Temporary add rsyslog
 
 ### Compile the latest firmware from the master
 Follow the instructions at https://github.com/RaspSDR/server to create a virtual Alpine Linux environment.
