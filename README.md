@@ -12,7 +12,7 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 
 If you use docker, then it all can be done quick without dealing with dependency.
 ```
-docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325b
+docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325c
 
 // and check it is running
 
@@ -183,3 +183,20 @@ Expected output format like:
 ```
 [{"callsign":"TF1EIN","coordinates":[64.0,-22.0],"frequency":21075.6,"timestamp":1740513555},{"callsign":"EA8DHH","coordinates":[28.0,-18.0],"frequency":21076.022,"timestamp":1740513555},{"callsign":"SV1JRR","coordinates":[37.0,22.0],"frequency":14074.497,"timestamp":1740513555},{"callsign":"DL6FKK","coordinates":[52.0,12.0],"frequency":7074.503,"timestamp":1740513555},{"callsign":"VA3JSF","coordinates":[44.0,-76.0],"frequency":14075.572,"timestamp":1740513555}]
 ```
+
+
+# Latest news
+
+Now the page also displays statistic of:
+```
+Top 10
+---------------------------------------------
+Long distance callsign
+High signal   callsign
+Low  signal   callsign
+Last spoted   callsign
+```
+
+
+
+![detail stat](./document/update-top10.png "update statistic")

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
     <style>
         #map {
-            height: 800px;
+            height: 700px;
             width: 100%;
         }
         .leaflet-tooltip {
@@ -34,25 +34,80 @@
        .locator {font-size: 16px; color: brown;}
        .signal {font-size: 16px; color: orangered;}
        .distance {font-size: 18px; color: green;}
+       
+       /* Flexbox layout for lists */
+       .list-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .list-section {
+            flex: 1 1 23%; /* Allows the sections to be responsive */
+            margin-right: 10px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+            border-right:2px solid black;
+            border-top:2px solid black;
+            border-left:2px solid black;
+            border-bottom:1px dotted black;
+        }
+
+        .list-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            Color:blue;
+        }
+
+        .list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .list li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
     <h1>Radio Spot Locations</h1>
     <div id="map"></div>
+
+    <div class="list-container">
+        <div class="list-section">
+            <h3>Top 10 Long Distance</h3>
+            <ul id="topDistance" class="list"></ul>
+        </div>
+        <div class="list-section">
+            <h3>Top 10 High Signal</h3>
+            <ul id="topHighSignal" class="list"></ul>
+        </div>
+        <div class="list-section">
+            <h3>Top 10 Low Signal</h3>
+            <ul id="topLowSignal" class="list"></ul>
+        </div>
+        <div class="list-section">
+            <h3>Latest spots XX sec ago</h3>
+            <ul id="topLowUptime" class="list"></ul>
+        </div>
+    </div>
     
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        //unix time conver
+        //unix time convert
         function unix2time(timestamp) {
-        const date = new Date(timestamp * 1000); // Convert from seconds to milliseconds
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so add 1
-        return `${hours}:${minutes}:${seconds}  ${year}/${month}`;
+            const date = new Date(timestamp * 1000); // Convert from seconds to milliseconds
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so add 1
+            return `${hours}:${minutes}:${seconds}  ${year}/${month}`;
         }
-
 
         // Create a map centered around a general location
         var map = L.map('map').setView([41.0, 28.0], 2); // Default view: [latitude, longitude], zoom level
@@ -88,15 +143,12 @@
 
         // Function to get the color for a specific frequency
         function getFrequencyColor(frequency) {
-            // Normalize frequency (e.g., for 7.074 MHz, we want 7)
             let freqKey = Math.round(frequency);
 
-            // Check if the frequency has a defined color
             if (frequencyColors[freqKey]) {
                 return frequencyColors[freqKey];
             }
 
-            // If it's an undefined frequency, check cache for a random color
             if (!randomColorCache[freqKey]) {
                 randomColorCache[freqKey] = getRandomColor();
             }
@@ -104,9 +156,8 @@
             return randomColorCache[freqKey];
         }
 
-        // Function to fetch spots and update map
+        // Function to fetch spots and update map and lists
         function fetchSpots() {
-            // Use the current origin (protocol + host + port) from the browser and append /spots
             const spotsUrl = window.location.origin + '/spots';
 
             fetch(spotsUrl)
@@ -114,11 +165,22 @@
                 .then(data => {
                     // Clear existing markers
                     map.eachLayer(function(layer) {
-                        //fix bug with old markers
                         if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
                             map.removeLayer(layer);
                         }
                     });
+
+                    // Sort data by various metrics
+                    const topLongDistance = [...data].sort((a, b) => parseFloat(b.distance) - parseFloat(a.distance)).slice(0, 10);
+                    const topHighSignal = [...data].sort((a, b) => b.signal - a.signal).slice(0, 10);
+                    const topLowSignal = [...data].sort((a, b) => a.signal - b.signal).slice(0, 10);
+                    const topLowUptime = [...data].sort((a, b) => a.uptime - b.uptime).slice(0, 10);
+
+                    // Display in lists
+                    document.getElementById('topDistance').innerHTML = topLongDistance.map(spot => `<li>${spot.callsign} - ${spot.distance}</li>`).join('');
+                    document.getElementById('topHighSignal').innerHTML = topHighSignal.map(spot => `<li>${spot.callsign} = ${spot.signal} dB</li>`).join('');
+                    document.getElementById('topLowSignal').innerHTML = topLowSignal.map(spot => `<li>${spot.callsign} = ${spot.signal} dB</li>`).join('');
+                    document.getElementById('topLowUptime').innerHTML = topLowUptime.map(spot => `<li>${spot.callsign} - ${spot.uptime} sec</li>`).join('');
 
                     // Add new markers to map
                     data.forEach(spot => {
@@ -139,7 +201,8 @@
                         var markerColor = getFrequencyColor(frequency);
 
                         markerRadius = 8;
-                        if (uptime > 75) {markerRadius = 5;}
+                        if (uptime > 75) { markerRadius = 5; }
+
                         // Create a very small dot marker with the callsign and frequency next to it
                         var marker = L.circleMarker([lat, lon], {
                             radius: markerRadius, // Smaller dot size
@@ -173,7 +236,7 @@
         // Initial fetch when the page loads
         fetchSpots();
 
-        // Fetch every 10 seconds
+        // Fetch every 15 seconds
         setInterval(fetchSpots, 15000);
     </script>
 </body>
