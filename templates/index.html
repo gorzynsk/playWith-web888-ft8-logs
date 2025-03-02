@@ -24,12 +24,20 @@
             font-size: 18px; /*  for frequency */
             color: #656;
         }
+        .tools{background-color: white;  /* Solid blue background */
+               opacity: 1;  /* Fully opaque (default is 1) */
+               border-radius: 3px;  /* Rounded corners */
+               box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);  /* Optional shadow */
+            }
+
        .time {font-size: 14px; color: navy;}
        .locator {font-size: 16px; color: brown;}
+       .signal {font-size: 16px; color: orangered;}
+       .distance {font-size: 18px; color: green;}
     </style>
 </head>
 <body>
-    <h1>Radio Spot Locations - last 30 minutes </h1>
+    <h1>Radio Spot Locations</h1>
     <div id="map"></div>
     
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -106,7 +114,8 @@
                 .then(data => {
                     // Clear existing markers
                     map.eachLayer(function(layer) {
-                        if (layer instanceof L.Marker) {
+                        //fix bug with old markers
+                        if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
                             map.removeLayer(layer);
                         }
                     });
@@ -117,6 +126,9 @@
                         var lon = spot.coordinates[1];
                         var callsign = spot.callsign;
                         var locator = spot.locator;
+                        var signal = spot.signal;
+                        var uptime = spot.uptime;
+                        var distance = spot.distance;
                         var timeX = unix2time(spot.timestamp);
                         var frequency = spot.frequency / 1000; // Divide frequency by 1000
 
@@ -126,9 +138,11 @@
                         // Get the color for this frequency
                         var markerColor = getFrequencyColor(frequency);
 
+                        markerRadius = 8;
+                        if (uptime > 75) {markerRadius = 5;}
                         // Create a very small dot marker with the callsign and frequency next to it
                         var marker = L.circleMarker([lat, lon], {
-                            radius: 5, // Smaller dot size
+                            radius: markerRadius, // Smaller dot size
                             fillColor: markerColor,
                             color: markerColor,
                             weight: 2,
@@ -137,11 +151,13 @@
                         }).addTo(map);
 
                         // Create the tooltip content with both callsign and frequency
-                        var tooltipContent = '<div class="tooltip-content">' + callsign + 
+                        var tooltipContent = '<div class="tools"> <div class="tooltip-content">' + callsign + 
                                              '<div class="tooltip-frequency">(' + formattedFrequency + ' MHz)</div>'+ 
                                               '<div class="time">Time: '+timeX+"</div>"+
-                                              '<div class="locator">loc.: '+locator+"</div>"+
-                                              '</div>';
+                                              '<div class="locator">Loc.: '+locator+"</div>"+
+                                              '<div class="signal">Signal: '+signal+"</div>"+
+                                              '<div class="distance">Distance: '+distance+"</div>"+
+                                              '</div></div>';
 
                         // Add a tooltip with the callsign and frequency
                         marker.bindTooltip(tooltipContent, {

@@ -12,16 +12,22 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 
 If you use docker, then it all can be done quick without dealing with dependency.
 ```
-docker run -d -p 5000:5000 -p 5140:5140/udp --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:latest
+docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:latest
 
 // and check it is running
 
 docker ps |grep ft8
 ```
-There is an option to specify environemnt variable
+
+
+There is an option to specify environemnt variables
 ```
 DEBUG=true
+LimitTime=1800
 ```
+
+The debug mode will generate detailed logs, while the LimitTime variable will limit the displayed spot results to the specified number of seconds. Any spots older than the value set in LimitTime will be removed. Standard = 1800 sec = 30 minutes.
+
 
 App will be accessible on http://localhost:5000, you have now to
 continue on rsyslog support.
@@ -126,14 +132,13 @@ Spots on the same frequency share the same color:
             21: 'purple',
             28: 'green'
 ```
-You can further customize these colors in index.html. Any undefined frequency will be assigned a random color.
-
+You can further customize these colors in the index.html file. Any frequency that is not defined will be assigned a random color. The callsigns received in the last ~60 seconds are displayed larger, while older ones appear smaller.
 
 
 
 ![detail](./document/detail.png "detail")
 
-Hover over a spot to see detailed information about the callsign and frequency.
+Hover over a spot to see detailed information about the callsign, frequency, distance, locator, signal strenght.
 
 The spots contain data from the last 1800 seconds (30 minutes).
 

@@ -8,6 +8,7 @@ import pytz
 import time
 import argparse
 from datetime import datetime as datet
+import os  # Added to import os for reading environment variables
 
 app = Flask(__name__)
 
@@ -30,6 +31,9 @@ def index():
 
 data_lock = Lock()
 active_spots = []
+
+# Retrieve the LimitTime from the environment variable if set, otherwise default to 1800
+LIMIT_TIME = int(os.getenv('LimitTime', 1800))
 
 class FT8Processor:
     def __init__(self):
@@ -60,7 +64,9 @@ class FT8Processor:
                 'timestamp': unix_time,
                 'coordinates': [lat, lon],
                 'humantime': timestamp,
-                'locator': locatorx
+                'locator': locatorx,
+                'distance': match.group(5),
+                'signal': match.group(4),
             }
         except Exception as e:
             debug_print(f"Parsing error: {str(e)}")
@@ -93,19 +99,22 @@ def get_spots():
         'callsign': spot['callsign'],
         'frequency': spot['frequency'],
         'timestamp': spot['timestamp'],
-        'locator': spot['locator']
-    } for spot in active_spots if nowUnix - spot['timestamp'] <= 1800]
+        'locator': spot['locator'],
+        'distance':spot['distance'],
+        'signal':spot['signal'],
+        'uptime':(nowUnix - spot['timestamp'])
+    } for spot in active_spots if nowUnix - spot['timestamp'] <= LIMIT_TIME]
 
     return jsonify(spots)
 
 def cleanup_spots():
-    """Clears out spots that are older than 30 minutes."""
+    """Clears out spots that are older than the defined LIMIT_TIME."""
     nowUnix = int(time.time())
     with data_lock:
         active_spots[:] = [
-            spot for spot in active_spots if nowUnix - spot['timestamp'] <= 1800
+            spot for spot in active_spots if nowUnix - spot['timestamp'] <= LIMIT_TIME
         ]
-    debug_print(f"Cleared spots older than 30 min. Remaining spots: {len(active_spots)}")
+    debug_print(f"Cleared spots older than {LIMIT_TIME} sec. Remaining spots: {len(active_spots)}")
 
 def schedule_cleanup():
     """Schedules the cleanup function to run every 30 seconds."""
@@ -115,6 +124,7 @@ def schedule_cleanup():
 
 if __name__ == '__main__':
     debug_print("Syslog should send data to UDP port: 5140")
+    debug_print("  *** LIMIT_TIME: We show spots from last "+str(LIMIT_TIME)+" sec")
     
     # Start the UDP listener in a separate thread
     Thread(target=udp_listener, daemon=True).start()
