@@ -103,9 +103,13 @@ def get_spots():
         'distance':spot['distance'],
         'signal':spot['signal'],
         'uptime':(nowUnix - spot['timestamp'])
+                  
     } for spot in active_spots if nowUnix - spot['timestamp'] <= LIMIT_TIME]
-
     return jsonify(spots)
+
+
+
+
 
 def cleanup_spots():
     """Clears out spots that are older than the defined LIMIT_TIME."""
@@ -123,8 +127,10 @@ def schedule_cleanup():
         cleanup_spots()
 
 if __name__ == '__main__':
-    debug_print("Syslog should send data to UDP port: 5140")
-    debug_print("  *** LIMIT_TIME: We show spots from last "+str(LIMIT_TIME)+" sec")
+    print("--------------------------------------------------------------------")
+    print("Syslog should send data to UDP port: 5140")
+    print("  *** LimitTime: We show spots from last: "+str(LIMIT_TIME)+" sec")
+    print("--------------------------------------------------------------------")
     
     # Start the UDP listener in a separate thread
     Thread(target=udp_listener, daemon=True).start()
