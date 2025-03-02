@@ -12,7 +12,7 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 
 If you use docker, then it all can be done quick without dealing with dependency.
 ```
-docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325c
+docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325
 
 // and check it is running
 
