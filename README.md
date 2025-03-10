@@ -4,7 +4,10 @@ Note: This is an alpha release. The current code is not as polished as I'd like 
 
 # Visialization of FT8 logs from web-888
 
-The latest version of web-888 now supports using syslog for logging FT8 data. You can either compile the software yourself or wait until it's included in the general firmware update.
+The latest version of web-888[build 20250304] now supports using syslog for logging FT8 data. 
+
+The compile part will be just keep for reference, it is not required anylonger. 
+But I would recommend to have a look on web-888 source code, since you can extend an functionality any time.
 
 
 
@@ -13,9 +16,7 @@ The latest version of web-888 now supports using syslog for logging FT8 data. Yo
 If you use docker, then it all can be done quick without dealing with dependency.
 ```
 docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325
-
 // and check it is running
-
 docker ps |grep ft8
 ```
 
@@ -39,35 +40,35 @@ continue on rsyslog support.
 
 # Temporary add rsyslog
 
-### Compile the latest firmware from the master
-Follow the instructions at https://github.com/RaspSDR/server to create a virtual Alpine Linux environment.
-
-
-Once set up, compile the firmware using:
-```
-cmake --build . -j `nproc --all`
-```
-
-After compilation, copy the new .bin file from the following path to the SD card:
-```
-~/alpine/alpine-root/root/server/build/
-```
-Note: Do not delete the original file—just rename it. This way, you can revert to the original version by renaming the file back at any time.
-
-
 ### Custom running linux - Not boot pesistent
 
 To run on a custom Linux setup, SSH into your device, install the rsyslog package, and create a configuration file:
 
 ```
+#add rsyslog to your running web-888
 apk-add rsyslog
 
-
+#modify the path, where you want to send your syslog logs
 vi /etc/rsyslog.conf
 #### Rules ####
 *.* @10.10.10.10:5140
 *.* @10.10.10.20:514
 & ~
+
+
+# Make chages to the running instance
+
+# start the rsyslog
+/etc/init.d/rsyslog start
+
+# restart your [web-888 server restart] frontend using http://IP:port/admin
+# do not perform reboot, since any changes get lost.
+
+# enable rsyslog
+# fo to extension -> ft8 -> log decodes to syslog [yes]
+
+# you are done, you should be able to see web interface in browser http://localhost:5000 and data should be updated from rsyslog
+
 ```
 
 This configuration sends logs to two IP addresses: 10.10.10.10:5140 and 10.10.10.20:514. The second IP is simply for demonstration, showing that multiple IPs can be used. For my project, port 5140 is mandatory.
@@ -200,3 +201,21 @@ Last spoted   callsign
 
 
 ![detail stat](./document/update-top10.png "update statistic")
+
+
+### Compile the latest firmware from the master, this part is not required any longer
+
+Follow the instructions at https://github.com/RaspSDR/server to create a virtual Alpine Linux environment.
+
+
+Once set up, compile the firmware using:
+```
+cmake --build . -j `nproc --all`
+```
+
+After compilation, copy the new .bin file from the following path to the SD card:
+```
+~/alpine/alpine-root/root/server/build/
+```
+Note: Do not delete the original file—just rename it. This way, you can revert to the original version by renaming the file back at any time.
+
