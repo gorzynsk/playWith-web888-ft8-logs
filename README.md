@@ -4,7 +4,7 @@ Note: This is an alpha release. The current code is not as polished as I'd like 
 
 # Visialization of FT8 logs from web-888
 
-The latest version of web-888[build 20250304] now supports using syslog for logging FT8 data. 
+The latest version of web-888 [build 20250304] supports using syslog for logging FT8 data. 
 
 The compile part will be just keep for reference, it is not required anylonger. 
 But I would recommend to have a look on web-888 source code, since you can extend an functionality any time.
