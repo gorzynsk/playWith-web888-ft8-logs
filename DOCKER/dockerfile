@@ -40,7 +40,7 @@ EXPOSE 5000/tcp
 CMD ["/bin/bash", "-c", "source /opt/venv/bin/activate && \
     if [ \"$DEBUG\" = \"true\" ]; then \
         echo 'Starting app.py in debug mode'; \
-        python app.py --debug; \
+        python app.py debug; \
     else \
         echo 'Starting app.py'; \
         python app.py; \
