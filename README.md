@@ -286,3 +286,4 @@ It then start to visualize all your records stored in adi file.
 ![grid tracker](./document/gridTracker2.png "grid Tracker 2")
 
 
+Note: The old wiki is available on https://gitlab.com/gridtracker.org/gridtracker/-/wikis/home
