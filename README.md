@@ -264,3 +264,25 @@ After compilation, copy the new .bin file from the following path to the SD card
 ```
 Note: Do not delete the original file—just rename it. This way, you can revert to the original version by renaming the file back at any time.
 
+
+# Integration with Grid tracker 2
+https://gridtracker.org/index.php/downloads/gridtracker-downloads
+
+```
+cd /yourDirctoryWith/logs
+
+wget https://download2.gridtracker.org/GridTracker2-2.250318.1-x86_64.AppImage
+chmod +rx GridTracker2-2.250318.1-x86_64.AppImage 
+
+./GridTracker2-2.250318.1-x86_64.AppImage 
+GridTracker2 starting up!
+
+```
+
+After starting click on settings->Logging->Click Wsjt-X log  [wsjtx_log.adi] and change location to your log file from docker container.
+It then start to visualize all your records stored in adi file.
+
+
+![grid tracker](./document/gridTracker2.png "grid Tracker 2")
+
+
