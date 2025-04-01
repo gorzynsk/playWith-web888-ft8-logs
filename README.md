@@ -18,11 +18,10 @@ If you use docker, then it all can be done quick without dealing with dependency
 docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325
 // and check it is running
 docker ps |grep ft8
-```
+
 
 If you want to store all ft8 logs in addif format (./logs/wsjtx_log.adi) then:
-```
-#create a directory to store adi file
+#create a directory to store wsjtx_log.adi  for volume:  -v $(pwd)/logs:/app/logs
 mkdir logs
 
 docker run -d -p 5000:5000 -p 5140:5140/udp \
