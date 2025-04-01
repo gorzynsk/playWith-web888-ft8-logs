@@ -18,6 +18,22 @@ If you use docker, then it all can be done quick without dealing with dependency
 docker run -d -p 5000:5000 -p 5140:5140/udp  -e LimitTime=900 --name ft8-visual --restart unless-stopped bujdo/ft8_visualisation_syslog_web888:020325
 // and check it is running
 docker ps |grep ft8
+
+
+If you want to store all ft8 logs in addif format (./logs/wsjtx_log.adi) then:
+#create a directory
+mkdir logs
+
+docker run -d -p 5000:5000 -p 5140:5140/udp \
+    -e LimitTime=900 \
+    -e STATION_CALLSIGN=N0CALL \
+    -e MY_GRIDSQUARE=AA00aa \
+    -e ADIF_LOGS=Yes \
+    --name ft8-visual \
+    --restart unless-stopped \
+    -v $(pwd)/logs:/apps/logs \
+    bujdo/ft8_visualisation_syslog_web888:XXXXXX
+
 ```
 
 
@@ -25,6 +41,10 @@ There is an option to specify environemnt variables
 ```
 DEBUG=true
 LimitTime=1800
+STATION_CALLSIGN =  "yourXcallsign"
+MY_GRIDSQUARE    =  "AA00AA"
+ADIF_LOGS        =  "No"        change to "yes" in case you want to generate adif logs in ./logs/wsjtx_log.adi
+
 ```
 
 The debug mode will generate detailed logs, while the LimitTime variable will limit the displayed spot results to the specified number of seconds. Any spots older than the value set in LimitTime will be removed. Standard = 1800 sec = 30 minutes.
@@ -187,6 +207,31 @@ Expected output format like:
 
 
 # Latest news
+
+
+1.Apr.2025 - program starts to support adif output
+```
+cat ./logs/wsjtx_log.adi
+-----------------------------------
+WSJT-X ADIF Export<eoh>
+<CALL:5>UY0CA
+<GRIDSQUARE:4>KN69
+<MODE:3>FT8
+<RST_SENT:3>-00  # Default value if not provided
+<RST_RCVD:2>-8
+<QSO_DATE:8>20250401
+<TIME_ON:6>065315
+<QSO_DATE_OFF:8>20250401
+<TIME_OFF:6>065315
+<BAND:4>20mm
+<FREQ:9>14.074709
+<STATION_CALLSIGN:6>N0CALL
+<MY_GRIDSQUARE:6>AA00AA
+<EOR>
+```
+
+
+
 
 Now the page also displays statistic of:
 ```
