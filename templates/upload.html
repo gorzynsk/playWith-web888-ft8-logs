@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload ADIF File - FT8 Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-form {
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        .form-group label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+        }
+        
+        .form-group label:has(input[type="checkbox"]) {
+            display: block;
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .info-box ul {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload ADIF File</h1>
+        
+        <div class="info-box">
+            <h3>Upload Instructions</h3>
+            <ul>
+                <li>Select an ADIF file (.adi or .adif extension)</li>
+                <li>Maximum file size: 16MB</li>
+                <li>Uploaded records will be added to the current spot display</li>
+                <li>The file will be automatically deleted after processing</li>
+            </ul>
+        </div>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        {% if 'Error' in message or 'Invalid' in message %}
+                            <div class="flash-message flash-error">{{ message }}</div>
+                        {% else %}
+                            <div class="flash-message flash-success">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form class="upload-form" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Select ADIF File:</label>
+                <input type="file" id="file" name="file" accept=".adi,.adif" required>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="display_on_map" name="display_on_map" checked>
+                    Display uploaded spots on map
+                </label>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    When checked, uploaded QSO records will be added to the active spots display. 
+                    Uncheck if you only want to update the worked callsigns/countries/locators list.
+                </p>
+            </div>
+            
+            <button type="submit" class="submit-btn">Upload and Process</button>
+        </form>
+
+        <a href="{{ url_for('index') }}" class="back-link">← Back to Map View</a>
+    </div>
+
+    <script>
+        // Add some basic file validation
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileName = file.name.toLowerCase();
+                if (!fileName.endsWith('.adi') && !fileName.endsWith('.adif')) {
+                    alert('Please select a valid ADIF file (.adi or .adif)');
+                    e.target.value = '';
+                }
+                if (file.size > 16 * 1024 * 1024) {
+                    alert('File size must be less than 16MB');
+                    e.target.value = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

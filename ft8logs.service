@@ -1,0 +1,38 @@
+[Unit]
+Description=FT8 Logs Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=ft8logs
+Group=ft8logs
+WorkingDirectory=/opt/ft8logs
+Environment=PATH=/opt/ft8logs/.venv/bin
+ExecStart=/opt/ft8logs/.venv/bin/python /opt/ft8logs/ft8logs.py
+Restart=always
+RestartSec=10
+
+# Environment variables
+Environment=STATION_CALLSIGN=SQ2WB
+Environment=MY_GRIDSQUARE=JO92ES
+Environment=LimitTime=1800
+Environment=ADIF_LOGS=No
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/ft8logs/logs /opt/ft8logs/uploads
+PrivateDevices=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+# Network settings
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

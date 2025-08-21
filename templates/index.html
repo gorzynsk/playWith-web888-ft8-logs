@@ -44,11 +44,11 @@
         }
 
         .list-section {
-            flex: 1 1 23%; /* Allows the sections to be responsive */
-            margin-right: 10px;
+            flex: 1 1 16%; /* Adjusted for 6 columns instead of 5 */
+            margin-right: 6px;
             margin-bottom: 20px;
             background: #f9f9f9;
-            padding: 5px;
+            padding: 4px;
             border-radius: 8px;
             box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
             border-right:2px solid black;
@@ -71,9 +71,61 @@
         .list li {
             margin: 5px 0;
         }
+        
+        .upload-link {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .upload-link:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .callsign-label {
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        .callsign-label div {
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        .clickable-callsign {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .clickable-callsign:hover {
+            color: #0056b3;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        
+        .blinking-marker {
+            animation: blink 2s linear 3;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
+    <a href="/upload" class="upload-link">Upload ADIF File</a>
     <h1>Radio Spot Locations</h1>
     <div id="map"></div>
 
@@ -93,6 +145,14 @@
         <div class="list-section">
             <h3>Latest spots XX sec ago</h3>
             <ul id="topLowUptime" class="list"></ul>
+        </div>
+        <div class="list-section">
+            <h3>New Stations (Not Worked)</h3>
+            <ul id="topNewStations" class="list"></ul>
+        </div>
+        <div class="list-section">
+            <h3>New Countries (Not Worked)</h3>
+            <ul id="topNewCountries" class="list"></ul>
         </div>
     </div>
     
@@ -140,6 +200,9 @@
 
         // Cache for random colors to ensure consistency for the same frequency
         let randomColorCache = {};
+        
+        // Store markers by callsign for blinking functionality
+        let markersByCallsign = {};
 
         // Function to get the color for a specific frequency
         function getFrequencyColor(frequency) {
@@ -155,6 +218,57 @@
 
             return randomColorCache[freqKey];
         }
+        
+        // Function to make a marker blink
+        function blinkMarker(callsign) {
+            const marker = markersByCallsign[callsign];
+            if (marker) {
+                // Remove any existing blink animation
+                marker.getElement().classList.remove('blinking-marker');
+                
+                // Add blink animation
+                setTimeout(() => {
+                    marker.getElement().classList.add('blinking-marker');
+                }, 10);
+                
+                // Remove animation after it completes (2s * 3 iterations = 6s)
+                setTimeout(() => {
+                    marker.getElement().classList.remove('blinking-marker');
+                }, 6100);
+                
+                // Also open the marker's tooltip to show details
+                marker.openTooltip();
+                
+                // Center map on the marker
+                map.setView(marker.getLatLng(), Math.max(map.getZoom(), 8));
+            }
+        }
+        
+        // Function to convert frequency to amateur radio band
+        function frequencyToBand(frequencyKhz) {
+            const freqMhz = frequencyKhz / 1000;
+            if (freqMhz >= 1.8 && freqMhz < 2.0) return '160m';
+            else if (freqMhz >= 3.5 && freqMhz < 4.0) return '80m';
+            else if (freqMhz >= 5.1 && freqMhz < 5.45) return '60m';
+            else if (freqMhz >= 7.0 && freqMhz < 7.3) return '40m';
+            else if (freqMhz >= 10.1 && freqMhz < 10.15) return '30m';
+            else if (freqMhz >= 14.0 && freqMhz < 14.35) return '20m';
+            else if (freqMhz >= 18.068 && freqMhz < 18.168) return '17m';
+            else if (freqMhz >= 21.0 && freqMhz < 21.45) return '15m';
+            else if (freqMhz >= 24.89 && freqMhz < 24.99) return '12m';
+            else if (freqMhz >= 28.0 && freqMhz < 29.7) return '10m';
+            else if (freqMhz >= 50 && freqMhz < 54) return '6m';
+            else if (freqMhz >= 144 && freqMhz < 148) return '2m';
+            else return 'Unknown';
+        }
+
+        // Function to create clickable callsign HTML with enhanced information
+        function createClickableCallsign(callsign, country = '', frequency = 0, additionalText = '') {
+            const band = frequency > 0 ? frequencyToBand(frequency) : '';
+            const countryInfo = country && country !== 'Unknown' ? ` <span style="color: #666; font-size: 0.9em;">(${country})</span>` : '';
+            const bandInfo = band && band !== 'Unknown' ? ` <span style="color: #999; font-size: 0.8em; font-weight: normal;">[${band}]</span>` : '';
+            return `<span class="clickable-callsign" onclick="blinkMarker('${callsign}')" title="Click to locate ${callsign} on map">${callsign}</span>${countryInfo}${bandInfo}${additionalText}`;
+        }
 
         // Function to fetch spots and update map and lists
         function fetchSpots() {
@@ -163,24 +277,29 @@
             fetch(spotsUrl)
                 .then(response => response.json())
                 .then(data => {
-                    // Clear existing markers
+                    // Clear existing markers and marker references
                     map.eachLayer(function(layer) {
                         if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
                             map.removeLayer(layer);
                         }
                     });
+                    markersByCallsign = {}; // Clear marker references
 
                     // Sort data by various metrics
                     const topLongDistance = [...data].sort((a, b) => parseFloat(b.distance) - parseFloat(a.distance)).slice(0, 10);
                     const topHighSignal = [...data].sort((a, b) => b.signal - a.signal).slice(0, 10);
                     const topLowSignal = [...data].sort((a, b) => a.signal - b.signal).slice(0, 10);
                     const topLowUptime = [...data].sort((a, b) => a.uptime - b.uptime).slice(0, 10);
+                    const topNewStations = [...data].filter(spot => !spot.worked_before).sort((a, b) => a.uptime - b.uptime).slice(0, 10);
+                    const topNewCountries = [...data].filter(spot => !spot.country_worked_before).sort((a, b) => a.uptime - b.uptime).slice(0, 10);
 
-                    // Display in lists
-                    document.getElementById('topDistance').innerHTML = topLongDistance.map(spot => `<li>${spot.callsign} - ${spot.distance}</li>`).join('');
-                    document.getElementById('topHighSignal').innerHTML = topHighSignal.map(spot => `<li>${spot.callsign} = ${spot.signal} dB</li>`).join('');
-                    document.getElementById('topLowSignal').innerHTML = topLowSignal.map(spot => `<li>${spot.callsign} = ${spot.signal} dB</li>`).join('');
-                    document.getElementById('topLowUptime').innerHTML = topLowUptime.map(spot => `<li>${spot.callsign} - ${spot.uptime} sec</li>`).join('');
+                    // Display in lists with clickable callsigns
+                    document.getElementById('topDistance').innerHTML = topLongDistance.map(spot => `<li>${createClickableCallsign(spot.callsign, spot.country, spot.frequency, ` - ${spot.distance}`)}</li>`).join('');
+                    document.getElementById('topHighSignal').innerHTML = topHighSignal.map(spot => `<li>${createClickableCallsign(spot.callsign, spot.country, spot.frequency, ` = ${spot.signal} dB`)}</li>`).join('');
+                    document.getElementById('topLowSignal').innerHTML = topLowSignal.map(spot => `<li>${createClickableCallsign(spot.callsign, spot.country, spot.frequency, ` = ${spot.signal} dB`)}</li>`).join('');
+                    document.getElementById('topLowUptime').innerHTML = topLowUptime.map(spot => `<li>${createClickableCallsign(spot.callsign, spot.country, spot.frequency, ` - ${spot.uptime} sec`)}</li>`).join('');
+                    document.getElementById('topNewStations').innerHTML = topNewStations.map(spot => `<li style="color: #008800; font-weight: bold;">${createClickableCallsign(spot.callsign, spot.country, spot.frequency)}</li>`).join('') || '<li style="color: #666;">No new stations</li>';
+                    document.getElementById('topNewCountries').innerHTML = topNewCountries.map(spot => `<li style="color: #FF6600; font-weight: bold;">${createClickableCallsign(spot.callsign, spot.country, spot.frequency)}</li>`).join('') || '<li style="color: #666;">No new countries</li>';
 
                     // Add new markers to map
                     data.forEach(spot => {
@@ -193,6 +312,7 @@
                         var distance = spot.distance;
                         var timeX = unix2time(spot.timestamp);
                         var frequency = spot.frequency / 1000; // Divide frequency by 1000
+                        var worked_before = spot.worked_before;
 
                         // Format frequency to 3 decimal places
                         var formattedFrequency = frequency.toFixed(3);
@@ -200,8 +320,11 @@
                         // Get the color for this frequency
                         var markerColor = getFrequencyColor(frequency);
 
-                        markerRadius = 8;
-                        if (uptime > 75) { markerRadius = 5; }
+                        markerRadius = 5;
+                        if (uptime > 75) { markerRadius = 3; }
+
+                        if (worked_before) { fillOpacity=0.3; markerColor = 'gray'; }
+                        else { fillOpacity=0.7; }
 
                         // Create a very small dot marker with the callsign and frequency next to it
                         var marker = L.circleMarker([lat, lon], {
@@ -210,8 +333,21 @@
                             color: markerColor,
                             weight: 2,
                             opacity: 1,
-                            fillOpacity: 0.7
+                            fillOpacity: fillOpacity
                         }).addTo(map);
+                        
+                        // Store marker reference by callsign for blinking functionality
+                        markersByCallsign[callsign] = marker;
+
+                        // Add permanent callsign label next to the marker
+                        // var callsignLabel = L.marker([lat, lon], {
+                        //     icon: L.divIcon({
+                        //         className: 'callsign-label',
+                        //         html: '<div style="color: ' + markerColor + '; font-weight: bold; font-size: 10px; text-shadow: 1px 1px 1px white; margin-left: 15px; margin-top: -6px;">' + callsign + '</div>',
+                        //         iconSize: [0, 0],
+                        //         iconAnchor: [0, 0]
+                        //     })
+                        // }).addTo(map);
 
                         // Create the tooltip content with both callsign and frequency
                         var tooltipContent = '<div class="tools"> <div class="tooltip-content">' + callsign + 
@@ -220,6 +356,7 @@
                                               '<div class="locator">Loc.: '+locator+"</div>"+
                                               '<div class="signal">Signal: '+signal+"</div>"+
                                               '<div class="distance">Distance: '+distance+"</div>"+
+                                              '<div class="worked-before">Worked Before: '+worked_before+"</div>"+
                                               '</div></div>';
 
                         // Add a tooltip with the callsign and frequency
